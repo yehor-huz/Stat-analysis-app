@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib as plt
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -59,6 +60,7 @@ class StatApp(tk.Tk):
             msg = f"Unfortunately, system does not support {filepath[extId:]}"
             messagebox.showerror(title="Extention error", message=msg)
             return
+        self._drawPlot()
         self._putReport()
    
     def _putText(self, text):
@@ -105,6 +107,7 @@ class StatApp(tk.Tk):
             self.sample = pd.DataFrame()
             self.sample['X'] = pd.Series(values)
             self._putReport()
+            self._drawPlot()
             weibullSettings.destroy()
         
         tk.Button(weibullSettings, text="Generate", command=submit).grid(column=0, row=2, columnspan=4)
@@ -142,8 +145,52 @@ class StatApp(tk.Tk):
         return
     
     def _handlePlot(self):
+        plotSettings = tk.Toplevel(self)
+        plotSettings.geometry("420x420")
+        plotSettings.title("Plot settings")
+        plotSettings.columnconfigure(index=0, weight=1)
+        plotSettings.columnconfigure(index=1, weight=1)
+        plotSettings.rowconfigure(index=0, weight=2)
+        plotSettings.rowconfigure(index=1, weight=1)
+        plotSettings.rowconfigure(index=2, weight=1)
+
+        tk.Label(plotSettings, text="Choose bin parameter").grid(column=0, row=0, columnspan=2)
+
+        binVar = tk.DoubleVar(value=10.0)
+
+        binLabel = tk.Label(plotSettings, text="k")
+        binLabel.grid(column=0, row=1, sticky='ew')
+        binEntry = tk.Entry(plotSettings, textvariable=binVar)
+        binEntry.grid(column=1, row=1, sticky='ew')
+
+        def submit():
+            bins = binEntry.get()
+            plotSettings.destroy()
+            self._drawPlot(int(bins))
+        tk.Button(plotSettings, text="Apply", command=submit).grid(column=0, row=2, columnspan=2)
         return
     
+    def _drawPlot(self, binsUser = 10):
+        if self.sample.empty:
+            return
+        for widget in self.canvas.winfo_children():
+            widget.destroy()
+
+        colName = self.sample.columns[0]
+        dataArr = self.sample[colName].to_numpy()
+        
+        figure = Figure(dpi=100)
+        plot = figure.subplots()
+        plot.hist(dataArr, bins = binsUser, density = True)
+        plot.set_xlabel(colName)
+        plot.set_ylabel("Density")
+
+        localCanvas = FigureCanvasTkAgg(figure, self.canvas)
+        localCanvas.draw()
+        
+        localCanvas.get_tk_widget().pack(fill="both", expand=True)
+
+
     def _nonLinearTransformation(self, event):
         if self.sample.empty:
             return
@@ -160,6 +207,7 @@ class StatApp(tk.Tk):
             dataArr, lmbda = stats.yeojohnson(dataArr)
         print(dataArr)
         self.sample[colName] = pd.Series(dataArr)
+        self._drawPlot()
         self._putReport()
         return
 
