@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import numpy as np
+from scipy import stats
 
 class StatApp(tk.Tk):
     def __init__(self, screenName = None, baseName = None, className = "Tk", useTk = True, sync = False, use = None):
@@ -35,7 +36,7 @@ class StatApp(tk.Tk):
         self.sidePanel.grid(column=2, row=0, sticky="nsew")
 
         self.sidePanel.columnconfigure(0, weight=1, pad=30)
-        self.sidePanel.rowconfigure(0, weight=4, pad=30)
+        self.sidePanel.rowconfigure(0, weight=2, pad=30)
         self.sidePanel.rowconfigure(1, weight=1, pad=30)
 
         self.statText = tk.Text(self.sidePanel, width=1)
@@ -48,9 +49,6 @@ class StatApp(tk.Tk):
 
         #sample
         self.sample = pd.DataFrame()
-
-        
-
     
     def _handleOpenFile(self):
         filepath = filedialog.askopenfilename()
@@ -61,8 +59,8 @@ class StatApp(tk.Tk):
             msg = f"Unfortunately, system does not support {filepath[extId:]}"
             messagebox.showerror(title="Extention error", message=msg)
             return
-        #print(self.sample.head())
-        self._putText(self.sample.to_string())
+        text = self._describeData()
+        self._putText(text)
    
     def _putText(self, text):
         self.statText.config(state="normal")
@@ -104,13 +102,38 @@ class StatApp(tk.Tk):
             values = np.random.weibull(a=kVar, size=int(nVar))
             self.sample = pd.DataFrame()
             self.sample['X'] = pd.Series(values)
-            self._putText(self.sample.to_string())
+            text = self._describeData()
+            self._putText(text)
             weibullSettings.destroy()
         tk.Button(weibullSettings, text="Generate", command=submit).grid(column=0, row=2, columnspan=4)
 
-
-        
         return
+    
+    def _describeData(self):
+        colName = self.sample.columns[0]
+        dataArr = self.sample[colName].to_numpy()
+        W, p = stats.shapiro(dataArr)
+        isNormalyDistributed = "Yes" if p > 0.05 else "No"
+        report = [
+            "REPORT",
+            "-" * 30,
+            f"Mean               : {self.sample[colName].mean():.4f}",
+            f"Median             : {self.sample[colName].median():.4f}",
+            f"Min                : {self.sample[colName].min():.4f}",
+            f"Max                : {self.sample[colName].max():.4f}",
+            f"Std Dev            : {self.sample[colName].std():.4f}",
+            f"Skewness           : {self.sample[colName].skew():.4f}",
+            f"Kurtosis           : {self.sample[colName].kurtosis():.4f}",
+            "-" * 30,
+            "SHAPIRO-WILK TEST",
+            f"W Statistic        : {W:.4f}",
+            f"p-value            : {p:.4g}",
+            f"Is Normal?         : {isNormalyDistributed}",
+            "-" * 30
+        ]
+        
+        fullText = "\n".join(report)
+        return fullText
     
     def _saveReport(self):
         return
