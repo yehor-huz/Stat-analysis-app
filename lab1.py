@@ -42,10 +42,10 @@ class StatApp(tk.Tk):
         self.statText = tk.Text(self.sidePanel, width=1)
         self.statText.grid(column=0, row=0, sticky="nsew")
 
-        self.nonLinearTransformator = ttk.Combobox(self.sidePanel, values=["None", "log", "Box-Cox", "Yeo-Johnson"], state="readonly")
-        self.nonLinearTransformator.set("None")
-        self.nonLinearTransformator.bind("<<ComboboxSelected>>", self._nonLinearTransformation)
-        self.nonLinearTransformator.grid(column=0, row=1, sticky="ew")
+        self.nonLinearTransformer = ttk.Combobox(self.sidePanel, values=["None", "log", "Box-Cox", "Yeo-Johnson"], state="readonly")
+        self.nonLinearTransformer.set("None")
+        self.nonLinearTransformer.bind("<<ComboboxSelected>>", self._nonLinearTransformation)
+        self.nonLinearTransformer.grid(column=0, row=1, sticky="ew")
 
         #sample
         self.sample = pd.DataFrame()
@@ -59,17 +59,19 @@ class StatApp(tk.Tk):
             msg = f"Unfortunately, system does not support {filepath[extId:]}"
             messagebox.showerror(title="Extention error", message=msg)
             return
-        text = self._describeData()
-        self._putText(text)
+        self._putReport()
    
     def _putText(self, text):
         self.statText.config(state="normal")
         self.statText.delete('1.0', tk.END)
         self.statText.insert(tk.END, text)
-        self.statText.config(state="disabled")        
+        self.statText.config(state="disabled")
+
+    def _putReport(self):
+        text = self._describeData()
+        self._putText(text)
     
     def _handleSampleGeneration(self):
-        #numpy.random.weibull
         weibullSettings = tk.Toplevel(self)
         weibullSettings.geometry("420x420")
         weibullSettings.title("Weibull Sample Generation")
@@ -102,9 +104,9 @@ class StatApp(tk.Tk):
             values = np.random.weibull(a=kVar, size=int(nVar))
             self.sample = pd.DataFrame()
             self.sample['X'] = pd.Series(values)
-            text = self._describeData()
-            self._putText(text)
+            self._putReport()
             weibullSettings.destroy()
+        
         tk.Button(weibullSettings, text="Generate", command=submit).grid(column=0, row=2, columnspan=4)
 
         return
@@ -136,12 +138,29 @@ class StatApp(tk.Tk):
         return fullText
     
     def _saveReport(self):
+        print("Report saved somewhere! Good luck finding it")
         return
     
     def _handlePlot(self):
         return
     
-    def _nonLinearTransformation(self):
+    def _nonLinearTransformation(self, event):
+        if self.sample.empty:
+            return
+        colName = self.sample.columns[0]
+        dataArr = self.sample[colName].to_numpy()
+        state = self.nonLinearTransformer.get()
+        if state == "None":
+            return
+        if state == "log":
+            dataArr = np.log(dataArr)
+        elif state == "Box-Cox":
+            dataArr, lmbda = stats.boxcox(dataArr)
+        elif state == "Yeo-Johnson":
+            dataArr, lmbda = stats.yeojohnson(dataArr)
+        print(dataArr)
+        self.sample[colName] = pd.Series(dataArr)
+        self._putReport()
         return
 
 app = StatApp()
