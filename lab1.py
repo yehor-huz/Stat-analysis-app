@@ -46,6 +46,11 @@ class StatApp(tk.Tk):
         self.nonLinearTransformator.bind("<<ComboboxSelected>>", self._nonLinearTransformation)
         self.nonLinearTransformator.grid(column=0, row=1, sticky="ew")
 
+        #sample
+        self.sample = pd.DataFrame()
+
+        
+
     
     def _handleOpenFile(self):
         filepath = filedialog.askopenfilename()
@@ -57,7 +62,7 @@ class StatApp(tk.Tk):
             messagebox.showerror(title="Extention error", message=msg)
             return
         #print(self.sample.head())
-        #self._putText(self.sample.to_string())
+        self._putText(self.sample.to_string())
    
     def _putText(self, text):
         self.statText.config(state="normal")
@@ -66,6 +71,45 @@ class StatApp(tk.Tk):
         self.statText.config(state="disabled")        
     
     def _handleSampleGeneration(self):
+        #numpy.random.weibull
+        weibullSettings = tk.Toplevel(self)
+        weibullSettings.geometry("420x420")
+        weibullSettings.title("Weibull Sample Generation")
+        weibullSettings.columnconfigure(index=0, weight=1)
+        weibullSettings.columnconfigure(index=1, weight=1)
+        weibullSettings.columnconfigure(index=2, weight=1)
+        weibullSettings.columnconfigure(index=3, weight=1)
+        weibullSettings.rowconfigure(index=0, weight=2)
+        weibullSettings.rowconfigure(index=1, weight=1)
+        weibullSettings.rowconfigure(index=2, weight=1)
+
+        tk.Label(weibullSettings, text="Choose k parameter and size of 1D sample (n)").grid(column=0, row=0, columnspan=4)
+
+        n = tk.DoubleVar(value=10.0)
+        k = tk.DoubleVar(value=3.6)
+
+        kLabel = tk.Label(weibullSettings, text="k")
+        kEntry = tk.Entry(weibullSettings, textvariable=k)
+        kLabel.grid(column=0, row=1, sticky='ew')
+        kEntry.grid(column=1, row=1, sticky='ew')
+
+        nLabel = tk.Label(weibullSettings, text="n")
+        nEntry = tk.Entry(weibullSettings, textvariable=n)
+        nLabel.grid(column=2, row=1, sticky='ew')
+        nEntry.grid(column=3, row=1, sticky='ew')
+
+        def submit():
+            nVar = n.get()
+            kVar = k.get()
+            values = np.random.weibull(a=kVar, size=int(nVar))
+            self.sample = pd.DataFrame()
+            self.sample['X'] = pd.Series(values)
+            self._putText(self.sample.to_string())
+            weibullSettings.destroy()
+        tk.Button(weibullSettings, text="Generate", command=submit).grid(column=0, row=2, columnspan=4)
+
+
+        
         return
     
     def _saveReport(self):
