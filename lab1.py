@@ -159,7 +159,7 @@ class StatApp(tk.Tk):
         binVar = tk.DoubleVar(value=10.0)
 
         binLabel = tk.Label(plotSettings, text="k")
-        binLabel.grid(column=0, row=1, sticky='ew')
+        binLabel.grid(column=0, row=1, sticky='ew') 
         binEntry = tk.Entry(plotSettings, textvariable=binVar)
         binEntry.grid(column=1, row=1, sticky='ew')
 

@@ -1,4 +1,6 @@
 ml/
+data/
+pdf/
 *.pdf
 *.txt
 *.ipynb
