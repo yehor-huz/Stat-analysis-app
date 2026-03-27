@@ -23,12 +23,15 @@ class SampleSelectionWidget(tk.Frame):
             for header in self.selectionList:
                 variable = tk.IntVar()
                 self.chekboxButtons.append(variable)
-                checkButton = tk.Checkbutton(self.textFrame, text=header, variable=variable)
+                checkButton = tk.Checkbutton(self.textFrame, text=header, variable=variable, command=self.throwEvent)
                 self.textFrame.window_create('end', window=checkButton)
                 self.textFrame.insert('end', "\n")
         self.textFrame.config(state="disabled", cursor="")
         return
-        
+    
+    def throwEvent(self):
+        self.event_generate("<<ColumnSelected>>")
+
     def getSelection(self):
         selected_items = []
         for i, button in enumerate(self.chekboxButtons):

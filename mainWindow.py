@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 import pandas as pd
-from nonLinearTransformerFrame import TRANSFORMATIONS
+from nonLinearTransformerFrame import TRANSFORMATIONS, TransformerWidget
 from reportFrame import ReportWidget
 from selectSampleFrame import SampleSelectionWidget
 
@@ -31,7 +31,6 @@ class MainWindow(tk.Tk):
         self.corrMenu.add_command(label="Partial Correlation")
         #sample
         self.sample = pd.DataFrame()
-        self.currentTransformation = TRANSFORMATIONS[0]
         #building main window
         #report window
         self.reportWidget = ReportWidget()
@@ -39,7 +38,12 @@ class MainWindow(tk.Tk):
         self.reportWidget.update()
         #choose rows window
         self.selectionWidget = SampleSelectionWidget()
+        self.selectionWidget.bind("<<ColumnSelected>>", self.updateViewColumnSelection)
         self.selectionWidget.grid(column=1, row=2, sticky="NSEW")
+        #non linear transformer
+        self.transformerWidget = TransformerWidget(self.sample)
+        self.transformerWidget.bind("<<DataTransformed>>", self.updateViewNonLinear)
+        self.transformerWidget.grid(column=1, row=1, sticky="NSEW")
 
 
         self.mainloop()
@@ -50,6 +54,7 @@ class MainWindow(tk.Tk):
             self.sample = pd.read_csv(filepath)
             headers = self.sample.columns
             self.selectionWidget.update(headers)
+            self.transformerWidget.update(self.sample)
         else:
             extId = filepath.rfind(".")
             msg = f"Unfortunately, system does not support {filepath[extId:]}"
@@ -57,5 +62,13 @@ class MainWindow(tk.Tk):
             return
         self.reportWidget.update(self.sample)
         return
+    
+    def updateViewNonLinear(self, event):
+        self.sample = self.transformerWidget.get()
+        self.reportWidget.update(self.sample)
+
+
+    def updateViewColumnSelection(self, event):
+        print(self.selectionWidget.getSelection())
     
 main = MainWindow()
