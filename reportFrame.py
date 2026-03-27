@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
+import numpy as np
 from prettytable import PrettyTable
 from scipy import stats
 
@@ -29,7 +30,7 @@ class ReportWidget(tk.Frame):
             table.field_names = [
                 "Feature", "Mean", "Median", "Min", "Max", 
                 "Std Dev", "Skewness", "Kurtosis", 
-                "W Stat", "p-value", "Normal?"
+                "W", "p-value", "Normal?"
             ]
             
             table.align["Feature"] = "l"
@@ -43,6 +44,10 @@ class ReportWidget(tk.Frame):
                     continue
 
                 dataArr = col_data.to_numpy()
+                
+                if not np.issubdtype(dataArr.dtype, np.number):
+                    continue
+
                 mean_val = col_data.mean()
                 median_val = col_data.median()
                 min_val = col_data.min()
@@ -76,9 +81,6 @@ class ReportWidget(tk.Frame):
             return table.get_string()
     
     def update(self, df=None):
-        if df == None:
-            self.putText("No data available.")
-            return
         textReport = self.generateReport(df)
         self.putText(textReport)
         return
