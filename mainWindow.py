@@ -3,8 +3,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 import pandas as pd
 from nonLinearTransformerFrame import TRANSFORMATIONS, TransformerWidget
+from plotControllerWidget import PlotControllerWidget
 from reportFrame import ReportWidget
 from selectSampleFrame import SampleSelectionWidget
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class MainWindow(tk.Tk):
     def __init__(self, screenName = None, baseName = None, className = "Tk", useTk = True, sync = False, use = None):
@@ -26,7 +28,7 @@ class MainWindow(tk.Tk):
         self.fileMenu.add_command(label="Save report")
 
         self.corrMenu = tk.Menu(self.toolbar, tearoff=False)
-        self.toolbar.add_cascade(label="Correlation", menu=self.corrMenu, state="disabled")
+        self.toolbar.add_cascade(label="Correlation", menu=self.corrMenu)
         self.corrMenu.add_command(label="Correlation Matrix")
         self.corrMenu.add_command(label="Partial Correlation")
         #sample
@@ -44,7 +46,12 @@ class MainWindow(tk.Tk):
         self.transformerWidget = TransformerWidget(self.sample)
         self.transformerWidget.bind("<<DataTransformed>>", self.updateViewNonLinear)
         self.transformerWidget.grid(column=1, row=1, sticky="NSEW")
-
+        #plot builder and plot settings
+        self.plotSelector = PlotControllerWidget(self)
+        self.plotSelector.bind("<<PlotSelected>>", self.drawPlot)
+        self.plotSelector.grid(column=1, row=0, sticky="NSEW")
+        self.canvas = tk.Frame(self, bg="lightgray")
+        self.canvas.grid(column=0, rowspan=2, row=0, sticky="nsew")
 
         self.mainloop()
 
@@ -66,9 +73,30 @@ class MainWindow(tk.Tk):
     def updateViewNonLinear(self, event):
         self.sample = self.transformerWidget.get()
         self.reportWidget.update(self.sample)
+        self.drawPlot(event)
 
 
     def updateViewColumnSelection(self, event):
+        self.drawPlot(event)
         print(self.selectionWidget.getSelection())
+
+    def drawPlot(self, event):
+        columns = self.selectionWidget.getSelection()
+        if len(columns) == 0: 
+            return
+        
+        figure = self.plotSelector.buildPlot(self.sample[columns])
+        
+        if not figure:
+            return
+        
+        for widget in self.canvas.winfo_children():
+            widget.destroy()
+
+        localCanvas = FigureCanvasTkAgg(figure, self.canvas)
+        localCanvas.draw()
+        localCanvas.get_tk_widget().pack(fill="both", expand=True)
+
+
     
 main = MainWindow()
