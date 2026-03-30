@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+import numpy as np
 import pandas as pd
+from correlationMatrixWindow import CorrelationMatrixWindow
 from nonLinearTransformerFrame import TRANSFORMATIONS, TransformerWidget
 from plotControllerWidget import PlotControllerWidget
 from reportFrame import ReportWidget
@@ -29,8 +31,9 @@ class MainWindow(tk.Tk):
 
         self.corrMenu = tk.Menu(self.toolbar, tearoff=False)
         self.toolbar.add_cascade(label="Correlation", menu=self.corrMenu)
-        self.corrMenu.add_command(label="Correlation Matrix")
+        self.corrMenu.add_command(label="Correlation Matrix", command=self.openCorrelationMatrixWindow)
         self.corrMenu.add_command(label="Partial Correlation")
+        self.corrMenu.add_command(label="Multy Correlation")
         #sample
         self.sample = pd.DataFrame()
         #building main window
@@ -59,6 +62,11 @@ class MainWindow(tk.Tk):
         filepath = filedialog.askopenfilename()
         if filepath.endswith(".csv"):
             self.sample = pd.read_csv(filepath)
+            headers = self.sample.columns
+            self.selectionWidget.update(headers)
+            self.transformerWidget.update(self.sample)
+        elif filepath.endswith(".txt"):
+            self.sample = pd.read_csv(filepath, sep="\s+", dtype=np.float64)
             headers = self.sample.columns
             self.selectionWidget.update(headers)
             self.transformerWidget.update(self.sample)
@@ -96,6 +104,10 @@ class MainWindow(tk.Tk):
         localCanvas = FigureCanvasTkAgg(figure, self.canvas)
         localCanvas.draw()
         localCanvas.get_tk_widget().pack(fill="both", expand=True)
+
+    def openCorrelationMatrixWindow(self):
+        matrixWin = CorrelationMatrixWindow(self.sample[self.selectionWidget.getSelection()], master=self)
+
 
 
     

@@ -5,12 +5,31 @@ import seaborn as sns
 
 class PlotBuilderInterface:
     def getHist(self, data, name):
-        dataArray = np.array(data)
+        dataArray = np.array(data, dtype=float)
+        dataArray = dataArray[~np.isnan(dataArray)]
+        
+        if dataArray.size == 0:
+            print(f"Немає даних для побудови гістограми: {name}")
+            return Figure(dpi=100)
+            
         figure = Figure(dpi=100)
         plot = figure.subplots()
-        plot.hist(dataArray, weights=np.zeros_like(dataArray) + 1. / dataArray.size, bins=np.arange(min(data), max(data) + 1, 1))
+        
+        weights = np.ones_like(dataArray) / len(dataArray)
+
+        calculated_bins = np.histogram_bin_edges(dataArray, bins='auto')
+        
+        plot.hist(
+            dataArray, 
+            bins=calculated_bins, 
+            weights=weights,       
+            edgecolor='black',     
+            alpha=0.75             
+        )
+        
         plot.set_xlabel(name)
-        plot.set_ylabel("Frequency")
+        plot.set_ylabel("Relative Frequency")
+        
         return figure
     
     def getScatter(self, data, names):
