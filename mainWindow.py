@@ -4,6 +4,7 @@ from tkinter import messagebox
 import numpy as np
 import pandas as pd
 from correlationMatrixWindow import CorrelationMatrixWindow
+from multyCorrelationWindow import MultipleCorrelationWindow
 from nonLinearTransformerFrame import TRANSFORMATIONS, TransformerWidget
 from partialCorrelationWindow import PartialCorrelationWindow
 from plotControllerWidget import PlotControllerWidget
@@ -37,7 +38,7 @@ class MainWindow(tk.Tk):
         self.toolbar.add_cascade(label="Correlation", menu=self.corrMenu)
         self.corrMenu.add_command(label="Correlation Matrix", command=self.openCorrelationMatrixWindow)
         self.corrMenu.add_command(label="Partial Correlation", command=self.openPartialCorrelationWindow)
-        self.corrMenu.add_command(label="Multy Correlation")
+        self.corrMenu.add_command(label="Multy Correlation", command=self.openMultiCorrelationWindow)
 
         self.corrMenu.add_command(label="Contingency Analysis", command=self.openContingencyAnalysisWindow)
         #sample
@@ -116,6 +117,9 @@ class MainWindow(tk.Tk):
     
     def openPartialCorrelationWindow(self):
         partialCorrWindow = PartialCorrelationWindow(df = self.sample, master = self)
+
+    def openMultiCorrelationWindow(self):
+        multiCorrWindow = MultipleCorrelationWindow(df = self.sample, master=self)
 
     def openContingencyAnalysisWindow(self):
         selected_columns = self.selectionWidget.getSelection()
