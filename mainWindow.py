@@ -5,15 +5,19 @@ import numpy as np
 import pandas as pd
 from correlationMatrixWindow import CorrelationMatrixWindow
 from nonLinearTransformerFrame import TRANSFORMATIONS, TransformerWidget
+from partialCorrelationWindow import PartialCorrelationWindow
 from plotControllerWidget import PlotControllerWidget
 from reportFrame import ReportWidget
 from selectSampleFrame import SampleSelectionWidget
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from table import ContingencyAnalysisWindow
+
 class MainWindow(tk.Tk):
     def __init__(self, screenName = None, baseName = None, className = "Tk", useTk = True, sync = False, use = None):
         super().__init__(screenName, baseName, className, useTk, sync, use)
         self.geometry("1080x720")
+        self.title("StatAnalysis")
         self.columnconfigure(index=0, weight=4, uniform="cols")
         self.columnconfigure(index=1, weight=1, uniform="cols")
         self.rowconfigure(index=0, weight=1, uniform="rows")
@@ -32,8 +36,10 @@ class MainWindow(tk.Tk):
         self.corrMenu = tk.Menu(self.toolbar, tearoff=False)
         self.toolbar.add_cascade(label="Correlation", menu=self.corrMenu)
         self.corrMenu.add_command(label="Correlation Matrix", command=self.openCorrelationMatrixWindow)
-        self.corrMenu.add_command(label="Partial Correlation")
+        self.corrMenu.add_command(label="Partial Correlation", command=self.openPartialCorrelationWindow)
         self.corrMenu.add_command(label="Multy Correlation")
+
+        self.corrMenu.add_command(label="Contingency Analysis", command=self.openContingencyAnalysisWindow)
         #sample
         self.sample = pd.DataFrame()
         #building main window
@@ -107,6 +113,30 @@ class MainWindow(tk.Tk):
 
     def openCorrelationMatrixWindow(self):
         matrixWin = CorrelationMatrixWindow(self.sample[self.selectionWidget.getSelection()], master=self)
+    
+    def openPartialCorrelationWindow(self):
+        partialCorrWindow = PartialCorrelationWindow(df = self.sample, master = self)
+
+    def openContingencyAnalysisWindow(self):
+        selected_columns = self.selectionWidget.getSelection()
+        
+        if self.sample.empty:
+            messagebox.showwarning(title="Warning", message="Load sample")
+            return
+            
+        if len(selected_columns) != 2:
+            messagebox.showwarning(
+                title="Selection Error", 
+                message="Load exactly two variables."
+            )
+            return
+            
+        col_x = selected_columns[0]
+        col_y = selected_columns[1]
+        
+        contingency_win = ContingencyAnalysisWindow(df=self.sample, col_x=col_x, col_y=col_y, master=self)
+        
+        contingency_win.focus_set()
 
 
 
